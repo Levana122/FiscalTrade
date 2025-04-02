@@ -1,0 +1,21 @@
+{
+    "France": {
+        "taux": 0.3
+    },
+    "USA": {
+        "taux_court": 0.37,
+        "taux_long": 0.2
+    },
+    "UK": {
+        "taux_base": 0.1,
+        "taux_max": 0.2,
+        "seuil": 50000,
+        "allocation": 6000
+    },
+    "Allemagne": {
+        "taux": 0.25
+    },
+    "Canada": {
+        "taux": 0.18
+    }
+}
