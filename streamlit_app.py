@@ -11,8 +11,6 @@ from email.mime.text import MIMEText
 from datetime import date
 import os
 import numpy as np
-
-import tkinter as tk
 import pandas as pd
 import requests
 import threading
@@ -22,7 +20,6 @@ import yfinance as yf
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from test_yfinance import get_price_history
-from tkinter import ttk ,messagebox ,filedialog
 from test_yfinance import get_stock_price, analyze_trend_custom, get_stock_price_value
 from taux_fiscal import get_taux_imposition, calcul_impot_usa, calcul_impot_uk
 from fpdf import FPDF
