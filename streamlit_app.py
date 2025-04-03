@@ -17,7 +17,6 @@ import threading
 import os
 import time
 import yfinance as yf
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from test_yfinance import get_price_history
 from test_yfinance import get_stock_price, analyze_trend_custom, get_stock_price_value
