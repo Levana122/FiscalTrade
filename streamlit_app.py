@@ -1,41 +1,30 @@
 
 import streamlit as st
 import pandas as pd
-import yfinance as yf
-from fpdf import FPDF
-import plotly.graph_objects as go
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-from email.mime.text import MIMEText
-from datetime import date
-import os
 import numpy as np
-import pandas as pd
+import yfinance as yf
 import requests
-import threading
+import json
 import os
 import time
-import yfinance as yf
-from test_yfinance import get_price_history
-from test_yfinance import get_stock_price, analyze_trend_custom, get_stock_price_value
-from taux_fiscal import get_taux_imposition, calcul_impot_usa, calcul_impot_uk
+import threading
+import ssl
+
+from datetime import datetime, date
 from fpdf import FPDF
-import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from email.mime.text import MIMEText
 from email.message import EmailMessage
-import ssl
+import smtplib
+
+import plotly.graph_objects as go
+
+from taux_fiscal import get_taux_imposition, calcul_impot_usa, calcul_impot_uk
+from test_yfinance import get_price_history, get_stock_price, analyze_trend_custom, get_stock_price_value
 import ia_predict
 from ia_predict import predire_tendance
-import plotly.graph_objects as go
-from plotly.offline import plot
-import plotly.graph_objects as go
-import numpy as np
-npNaN = np.nan
-from datetime import datetime
-import json
+
 import openpyxl
 from openpyxl.styles import Font
 # 📌 Initialisation de l'historique des transactions
