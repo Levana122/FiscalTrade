@@ -1,5 +1,10 @@
 streamlit
-yfinance
 pandas
+numpy
+yfinance
+requests
 fpdf
 plotly
+scikit-learn
+openpyxl
+
