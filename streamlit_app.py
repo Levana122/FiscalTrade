@@ -17,7 +17,6 @@ import threading
 import os
 import time
 import yfinance as yf
-import matplotlib.pyplot as plt
 from test_yfinance import get_price_history
 from test_yfinance import get_stock_price, analyze_trend_custom, get_stock_price_value
 from taux_fiscal import get_taux_imposition, calcul_impot_usa, calcul_impot_uk
