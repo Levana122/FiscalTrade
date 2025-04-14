@@ -395,3 +395,20 @@ if st.button("🔍 Analyser mes positions avec IA"):
                 - Tendance : **{conseil['Tendance']}**
                 - 🧠 **Conseil IA** : {conseil['Conseil']}
                 """)
+from news import get_news
+
+st.header("📰 Actualités Financières Récentes")
+
+if ticker:
+    articles = get_news(ticker.upper())
+
+    if articles:
+        for article in articles:
+            st.markdown(f"### [{article['title']}]({article['url']})")
+            st.write(f"🕒 {article['published_at'][:10]}")
+            st.write(article['description'][:300] + "...")
+            st.markdown("---")
+    else:
+        st.info("Aucune actualité récente trouvée.")
+else:
+    st.info("Saisis un ticker pour voir les actualités.")
