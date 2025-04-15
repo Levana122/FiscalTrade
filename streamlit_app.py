@@ -396,6 +396,8 @@ if st.button("🔍 Analyser mes positions avec IA"):
                 - 🧠 **Conseil IA** : {conseil['Conseil']}
                 """)
 from news import get_news
+from datetime import date
+
 st.header("📰 Actualités Financières Récentes")
 
 col1, col2 = st.columns(2)
@@ -405,24 +407,38 @@ with col1:
 with col2:
     mot_cle = st.text_input("📚 Mot-clé (optionnel)", value="")
 
-def get_news(symbole=None, mot_cle=None, language="fr", limit=5):
-    api_key = st.secrets["marketaux"]["api_key"]
+secteur = st.selectbox("📂 Secteur", ["Aucun", "Crypto", "Technologie", "Énergie", "Banques", "Santé", "Automobile", "Luxe"])
+date_min = st.date_input("📅 À partir du :", value=date(2024, 1, 1))
 
+def get_news(symbole=None, mot_cle=None, secteur=None, date_min=None, language="fr", limit=5):
+    api_key = st.secrets["marketaux"]["api_key"]
     params = {
         "language": language,
         "api_token": api_key,
-        "limit": limit
+        "limit": limit,
+        "published_after": date_min.strftime("%Y-%m-%d")
     }
 
-    if mot_cle:
+    # Recherche prioritaire : secteur > mot-clé > symbole
+    secteurs_query = {
+        "Crypto": "bitcoin OR crypto OR ethereum",
+        "Technologie": "Google OR Apple OR Microsoft OR IA OR Nvidia",
+        "Énergie": "pétrole OR gaz OR énergie OR Total",
+        "Banques": "banques OR taux OR obligations OR BNP",
+        "Santé": "pharma OR santé OR biotech",
+        "Automobile": "Tesla OR voitures OR batteries OR Ford",
+        "Luxe": "LVMH OR Kering OR Hermès"
+    }
+
+    if secteur and secteur != "Aucun":
+        params["query"] = secteurs_query.get(secteur, "")
+    elif mot_cle:
         params["query"] = mot_cle
     elif symbole:
         params["symbols"] = symbole
 
-    url = "https://api.marketaux.com/v1/news/all"
-    
     try:
-        response = requests.get(url, params=params)
+        response = requests.get("https://api.marketaux.com/v1/news/all", params=params)
         data = response.json()
         if "data" in data and data["data"]:
             return data["data"]
@@ -436,9 +452,10 @@ def get_news(symbole=None, mot_cle=None, language="fr", limit=5):
             "published_at": ""
         }]
 
-# Appel dynamique
-articles = get_news(symbole.upper(), mot_cle)
+# Appel
+articles = get_news(symbole.upper(), mot_cle, secteur, date_min)
 
+# Affichage
 if articles:
     for article in articles:
         st.markdown(f"### [{article['title']}]({article['url']})")
@@ -446,5 +463,4 @@ if articles:
         st.write(article['description'][:300] + "...")
         st.markdown("---")
 else:
-    st.info("Aucune actualité trouvée.")
-
+    st.info("Aucune actualité trouvée pour ce filtre.")
