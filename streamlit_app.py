@@ -34,6 +34,14 @@ historique = []
 import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
+# 📋 WATCHLIST STYLE MSN - FiscalTrade (Style amélioré)
+
+import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+
+# ✅ Configuration de la page DOIT être appelée en premier
+st.set_page_config(page_title="FiscalTrade", layout="wide")
 
 # === Initialisation de la watchlist ===
 if "watchlist" not in st.session_state:
@@ -115,6 +123,9 @@ if st.session_state.watchlist:
             st.error(f"Erreur {ticker} : {e}")
 else:
     st.info("Aucun actif surveillé.")
+
+
+
 
 st.set_page_config(page_title="FiscalTrade", layout="wide")
 st.title("💼 FiscalTrade - App Complète")
