@@ -29,7 +29,7 @@ import openpyxl
 from openpyxl.styles import Font
 # 📌 Initialisation de l'historique des transactions
 historique = []
-# 📋 WATCHLIST STYLE MSN - FiscalTrade (Vue compacte horizontale inspirée de MSN)
+# 📋 WATCHLIST STYLE MSN - FiscalTrade (Final avec recherche intégrée)
 
 import streamlit as st
 import yfinance as yf
@@ -45,18 +45,18 @@ if "watchlist" not in st.session_state:
 
 st.header("📋 Watchlist - Style MSN Finance")
 
-# === Ajouter un ticker ===
+# === Ajouter ou rechercher un ticker ===
 col1, col2 = st.columns([4, 1])
 with col1:
-    new_ticker = st.text_input("Ajouter un ticker à suivre (ex: AAPL, BTC-USD)", key="watch_add")
+    new_ticker = st.text_input("🔍 Rechercher ou ajouter un ticker (ex: AAPL, BTC-USD)", key="watch_add")
 with col2:
-    if st.button("➕ Ajouter") and new_ticker:
+    if st.button("Ajouter à la watchlist") and new_ticker:
         new_ticker = new_ticker.upper()
         if new_ticker not in [t['ticker'] for t in st.session_state.watchlist]:
             st.session_state.watchlist.append({"ticker": new_ticker})
             st.success(f"{new_ticker} ajouté à la watchlist")
         else:
-            st.warning("Ticker déjà présent")
+            st.warning("Déjà présent dans la watchlist")
 
 # === Sparkline compacte ===
 def plot_sparkline(data):
@@ -120,34 +120,6 @@ if st.session_state.watchlist:
             st.error(f"Erreur {ticker} : {e}")
 else:
     st.info("Aucun actif surveillé.")
-
-# === Barre de recherche dynamique pour visualiser un actif sans l'ajouter ===
-st.subheader("🔍 Rechercher un actif à visualiser")
-recherche = st.text_input("Entrez un ticker (ex: NVDA, META, NFLX)", key="recherche_ticker")
-if recherche:
-    recherche = recherche.upper()
-    try:
-        data_recherche = yf.Ticker(recherche).history(period="7d")
-        if data_recherche.empty:
-            st.warning(f"Aucune donnée pour {recherche}")
-        else:
-            prix = data_recherche['Close'].iloc[-1]
-            prix_prec = data_recherche['Close'].iloc[-2] if len(data_recherche['Close']) > 1 else prix
-            variation = ((prix - prix_prec) / prix_prec) * 100 if prix_prec else 0
-            variation_txt = f"{variation:+.2f} %"
-            couleur = "green" if variation >= 0 else "red"
-            symbole = "🔺" if variation >= 0 else "🔻"
-
-            st.markdown(f"### Résultat pour {recherche}")
-            col1, col2, col3, col4 = st.columns([2, 3, 1, 1])
-            col1.markdown(f"**{recherche}**")
-            col2.plotly_chart(plot_sparkline(data_recherche), use_container_width=True)
-            col3.markdown(f"<span style='font-size: 14px;'>{prix:.2f} $</span>", unsafe_allow_html=True)
-            col4.markdown(f"<span style='color:{couleur}; font-size: 14px;'>{symbole} {variation_txt}</span>", unsafe_allow_html=True)
-
-    except Exception as e:
-        st.error(f"Erreur lors de la recherche de {recherche} : {e}")
-
 
    
 
