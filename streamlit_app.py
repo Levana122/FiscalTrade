@@ -330,49 +330,6 @@ if st.button("🧮 Simuler la vente"):
         st.error(f"❌ Erreur : {e}")
 
 
-st.header("📋 Watchlist Dynamique")
-
-if "watchlist" not in st.session_state:
-    st.session_state.watchlist = []
-
-col1, col2 = st.columns([2, 1])
-with col1:
-    new_ticker = st.text_input("➕ Ajouter un ticker", key="add_watch")
-with col2:
-    if st.button("Ajouter à la watchlist"):
-        if new_ticker.upper() not in [x["ticker"] for x in st.session_state.watchlist]:
-            st.session_state.watchlist.append({"ticker": new_ticker.upper()})
-            st.success(f"{new_ticker.upper()} ajouté !")
-        else:
-            st.warning("Déjà dans la liste.")
-if st.session_state.watchlist:
-    st.subheader("🧠 Suivi des actifs")
-
-    for i, entry in enumerate(st.session_state.watchlist):
-        ticker = entry["ticker"]
-
-        try:
-            data = yf.Ticker(ticker).history(period="1d")
-            if not data.empty:
-                prix = data["Close"].iloc[-1]
-                prix_prec = data["Close"].iloc[-2] if len(data["Close"]) > 1 else prix
-                variation = ((prix - prix_prec) / prix_prec) * 100 if prix_prec else 0
-
-                col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
-                col1.markdown(f"**{ticker}**")
-                col2.markdown(f"📈 **{prix:.2f} $**")
-                col3.markdown(f"{'🔺' if variation > 0 else '🔻'} {variation:.2f} %")
-
-                if col4.button("❌", key=f"suppr_{i}"):
-                    st.session_state.watchlist.pop(i)
-                    st.experimental_rerun()
-
-            else:
-                st.warning(f"⚠️ Données indisponibles pour {ticker}")
-
-        except Exception as e:
-            st.error(f"{ticker} : erreur récupération → {e}")
-
 
 import streamlit as st
 import smtplib, ssl
