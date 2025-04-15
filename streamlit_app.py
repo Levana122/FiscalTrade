@@ -29,6 +29,92 @@ import openpyxl
 from openpyxl.styles import Font
 # 📌 Initialisation de l'historique des transactions
 historique = []
+# 📋 WATCHLIST STYLE MSN - FiscalTrade (Style amélioré)
+
+import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+
+# === Initialisation de la watchlist ===
+if "watchlist" not in st.session_state:
+    st.session_state.watchlist = []
+
+st.header("📋 Watchlist - Style MSN Finance")
+
+# === Ajouter un ticker ===
+col1, col2 = st.columns([3, 1])
+with col1:
+    new_ticker = st.text_input("Ajouter un ticker à suivre (ex: AAPL, BTC-USD)", key="watch_add")
+with col2:
+    if st.button("➕ Ajouter") and new_ticker:
+        new_ticker = new_ticker.upper()
+        if new_ticker not in [t['ticker'] for t in st.session_state.watchlist]:
+            st.session_state.watchlist.append({"ticker": new_ticker.upper()})
+            st.success(f"{new_ticker.upper()} ajouté à la watchlist")
+        else:
+            st.warning("Ticker déjà présent")
+
+# === Fonction pour mini graphique avec remplissage ===
+def plot_mini_chart(data):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=data.index,
+        y=data['Close'],
+        fill='tozeroy',
+        fillcolor='rgba(255, 0, 0, 0.1)',
+        line=dict(width=1.5, color='crimson'),
+        mode="lines",
+        showlegend=False
+    ))
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=50,
+        width=240,
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+    return fig
+
+# === Affichage compact de la watchlist façon MSN ===
+st.markdown("""<style>
+    .element-container:nth-child(n) > div > div {
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+    }
+</style>""", unsafe_allow_html=True)
+
+if st.session_state.watchlist:
+    for i, item in enumerate(st.session_state.watchlist):
+        ticker = item['ticker']
+
+        try:
+            data = yf.Ticker(ticker).history(period="7d")
+            if data.empty:
+                st.warning(f"Aucune donnée pour {ticker}")
+                continue
+
+            prix = data['Close'].iloc[-1]
+            prix_prec = data['Close'].iloc[-2] if len(data['Close']) > 1 else prix
+            variation = ((prix - prix_prec) / prix_prec) * 100 if prix_prec else 0
+            variation_txt = f"{variation:+.2f} %"
+            couleur = "green" if variation >= 0 else "red"
+            symbole = "🔺" if variation >= 0 else "🔻"
+
+            col1, col2, col3, col4 = st.columns([1, 3, 1.5, 0.3])
+            col1.markdown(f"<span style='font-weight: bold; font-size: 15px;'>{ticker}</span>", unsafe_allow_html=True)
+            col2.plotly_chart(plot_mini_chart(data), use_container_width=True)
+            col3.markdown(f"<span style='color:{couleur}; font-size: 14px;'>{symbole} {variation_txt}</span>", unsafe_allow_html=True)
+
+            if col4.button("❌", key=f"del_{i}"):
+                st.session_state.watchlist.pop(i)
+                st.experimental_rerun()
+
+        except Exception as e:
+            st.error(f"Erreur {ticker} : {e}")
+else:
+    st.info("Aucun actif surveillé.")
 
 st.set_page_config(page_title="FiscalTrade", layout="wide")
 st.title("💼 FiscalTrade - App Complète")
