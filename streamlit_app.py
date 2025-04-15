@@ -127,7 +127,7 @@ else:
 
 
 
-st.set_page_config(page_title="FiscalTrade", layout="wide")
+
 st.title("💼 FiscalTrade - App Complète")
 
 if "transactions" not in st.session_state:
