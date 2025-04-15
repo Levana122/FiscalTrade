@@ -396,19 +396,55 @@ if st.button("🔍 Analyser mes positions avec IA"):
                 - 🧠 **Conseil IA** : {conseil['Conseil']}
                 """)
 from news import get_news
-
 st.header("📰 Actualités Financières Récentes")
 
-if ticker:
-    articles = get_news(ticker.upper())
+col1, col2 = st.columns(2)
+with col1:
+    symbole = st.text_input("🔍 Ticker (ex : AAPL, BTC, TSLA)", value="AAPL")
 
-    if articles:
-        for article in articles:
-            st.markdown(f"### [{article['title']}]({article['url']})")
-            st.write(f"🕒 {article['published_at'][:10]}")
-            st.write(article['description'][:300] + "...")
-            st.markdown("---")
-    else:
-        st.info("Aucune actualité récente trouvée.")
+with col2:
+    mot_cle = st.text_input("📚 Mot-clé (optionnel)", value="")
+
+def get_news(symbole=None, mot_cle=None, language="fr", limit=5):
+    api_key = st.secrets["marketaux"]["api_key"]
+
+    params = {
+        "language": language,
+        "api_token": api_key,
+        "limit": limit
+    }
+
+    if mot_cle:
+        params["query"] = mot_cle
+    elif symbole:
+        params["symbols"] = symbole
+
+    url = "https://api.marketaux.com/v1/news/all"
+    
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+        if "data" in data and data["data"]:
+            return data["data"]
+        else:
+            return []
+    except Exception as e:
+        return [{
+            "title": "Erreur de récupération",
+            "description": str(e),
+            "url": "#",
+            "published_at": ""
+        }]
+
+# Appel dynamique
+articles = get_news(symbole.upper(), mot_cle)
+
+if articles:
+    for article in articles:
+        st.markdown(f"### [{article['title']}]({article['url']})")
+        st.write(f"🕒 {article['published_at'][:10]}")
+        st.write(article['description'][:300] + "...")
+        st.markdown("---")
 else:
-    st.info("Saisis un ticker pour voir les actualités.")
+    st.info("Aucune actualité trouvée.")
+
