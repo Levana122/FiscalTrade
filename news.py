@@ -1,11 +1,11 @@
 # news.py
 
 import requests
-
-API_KEY = "wAh7fdgSKR1GqtOrn10PX3LMGU9GNEYvXgdujskD"
+import streamlit as st
 
 def get_news(ticker, language="fr", limit=5):
-    url = f"https://api.marketaux.com/v1/news/all?symbols={ticker}&language={language}&api_token={API_KEY}"
+    api_key = st.secrets["marketaux"]["api_key"]  # 🔐 Récupération sécurisée
+    url = f"https://api.marketaux.com/v1/news/all?symbols={ticker}&language={language}&api_token={api_key}"
     
     try:
         response = requests.get(url)
@@ -15,4 +15,9 @@ def get_news(ticker, language="fr", limit=5):
         else:
             return []
     except Exception as e:
-        return [{"title": "Erreur de récupération", "description": str(e), "url": "#", "published_at": ""}]
+        return [{
+            "title": "Erreur de récupération",
+            "description": str(e),
+            "url": "#",
+            "published_at": ""
+        }]
