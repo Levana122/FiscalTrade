@@ -29,9 +29,7 @@ import openpyxl
 from openpyxl.styles import Font
 # 📌 Initialisation de l'historique des transactions
 historique = []
-# 📋 WATCHLIST STYLE MSN - FiscalTrade (Style amélioré)
-
-# 📋 WATCHLIST STYLE MSN - FiscalTrade (Style amélioré avec sparkline, variation, prix)
+# 📋 WATCHLIST STYLE MSN - FiscalTrade (Vue compacte horizontale inspirée de MSN)
 
 import streamlit as st
 import yfinance as yf
@@ -40,9 +38,10 @@ import plotly.graph_objects as go
 # ✅ Configuration de la page
 st.set_page_config(page_title="FiscalTrade", layout="wide")
 
-# === Initialisation de la watchlist ===
+# === Initialisation de la watchlist avec actions par défaut ===
+defaut_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 if "watchlist" not in st.session_state:
-    st.session_state.watchlist = []
+    st.session_state.watchlist = [{"ticker": t} for t in defaut_tickers]
 
 st.header("📋 Watchlist - Style MSN Finance")
 
@@ -59,7 +58,7 @@ with col2:
         else:
             st.warning("Ticker déjà présent")
 
-# === Fonction pour sparkline ===
+# === Sparkline compacte ===
 def plot_sparkline(data):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -72,8 +71,8 @@ def plot_sparkline(data):
         showlegend=False
     ))
     fig.update_layout(
-        height=50,
-        width=200,
+        height=40,
+        width=150,
         margin=dict(l=0, r=0, t=0, b=0),
         xaxis=dict(visible=False),
         yaxis=dict(visible=False),
@@ -82,14 +81,15 @@ def plot_sparkline(data):
     )
     return fig
 
-# === Affichage compact façon MSN ===
+# === Style CSS compact ===
 st.markdown("""<style>
     .element-container:nth-child(n) > div > div {
-        padding-top: 0.2rem;
-        padding-bottom: 0.2rem;
+        padding-top: 0.1rem;
+        padding-bottom: 0.1rem;
     }
 </style>""", unsafe_allow_html=True)
 
+# === Affichage ligne horizontale ===
 if st.session_state.watchlist:
     for i, item in enumerate(st.session_state.watchlist):
         ticker = item['ticker']
@@ -107,12 +107,11 @@ if st.session_state.watchlist:
             couleur = "green" if variation >= 0 else "red"
             symbole = "🔺" if variation >= 0 else "🔻"
 
-            # Affichage ligne unique : Ticker | Sparkline | Prix | Variation | ❌
-            col1, col2, col3, col4, col5 = st.columns([1, 2, 1, 1, 0.3])
+            col1, col2, col3, col4, col5 = st.columns([1, 2.5, 1, 1, 0.5])
             col1.markdown(f"**{ticker}**")
             col2.plotly_chart(plot_sparkline(data), use_container_width=True)
-            col3.markdown(f"{prix:.2f} $")
-            col4.markdown(f"<span style='color:{couleur}'>{symbole} {variation_txt}</span>", unsafe_allow_html=True)
+            col3.markdown(f"<span style='font-size: 14px;'>{prix:.2f} $</span>", unsafe_allow_html=True)
+            col4.markdown(f"<span style='color:{couleur}; font-size: 14px;'>{symbole} {variation_txt}</span>", unsafe_allow_html=True)
             if col5.button("❌", key=f"del_{i}"):
                 st.session_state.watchlist.pop(i)
                 st.experimental_rerun()
@@ -121,6 +120,34 @@ if st.session_state.watchlist:
             st.error(f"Erreur {ticker} : {e}")
 else:
     st.info("Aucun actif surveillé.")
+
+# === Barre de recherche dynamique pour visualiser un actif sans l'ajouter ===
+st.subheader("🔍 Rechercher un actif à visualiser")
+recherche = st.text_input("Entrez un ticker (ex: NVDA, META, NFLX)", key="recherche_ticker")
+if recherche:
+    recherche = recherche.upper()
+    try:
+        data_recherche = yf.Ticker(recherche).history(period="7d")
+        if data_recherche.empty:
+            st.warning(f"Aucune donnée pour {recherche}")
+        else:
+            prix = data_recherche['Close'].iloc[-1]
+            prix_prec = data_recherche['Close'].iloc[-2] if len(data_recherche['Close']) > 1 else prix
+            variation = ((prix - prix_prec) / prix_prec) * 100 if prix_prec else 0
+            variation_txt = f"{variation:+.2f} %"
+            couleur = "green" if variation >= 0 else "red"
+            symbole = "🔺" if variation >= 0 else "🔻"
+
+            st.markdown(f"### Résultat pour {recherche}")
+            col1, col2, col3, col4 = st.columns([2, 3, 1, 1])
+            col1.markdown(f"**{recherche}**")
+            col2.plotly_chart(plot_sparkline(data_recherche), use_container_width=True)
+            col3.markdown(f"<span style='font-size: 14px;'>{prix:.2f} $</span>", unsafe_allow_html=True)
+            col4.markdown(f"<span style='color:{couleur}; font-size: 14px;'>{symbole} {variation_txt}</span>", unsafe_allow_html=True)
+
+    except Exception as e:
+        st.error(f"Erreur lors de la recherche de {recherche} : {e}")
+
 
    
 
