@@ -8,14 +8,7 @@ import os
 import time
 import threading
 import ssl
-import streamlit as st
-import yfinance as yf
-import requests
-import streamlit as st
-import yfinance as yf
 import plotly.graph_objects as go
-from datetime import date
-
 from datetime import datetime, date
 from fpdf import FPDF
 from email.mime.multipart import MIMEMultipart
@@ -23,14 +16,10 @@ from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
 from email.message import EmailMessage
 import smtplib
-
-import plotly.graph_objects as go
-
 from taux_fiscal import get_taux_imposition, calcul_impot_usa, calcul_impot_uk
 from test_yfinance import get_price_history, get_stock_price, analyze_trend_custom, get_stock_price_value
 import ia_predict
 from ia_predict import predire_tendance
-
 import openpyxl
 from openpyxl.styles import Font
 
@@ -150,12 +139,6 @@ sections = [
 ]
 selected_section = st.sidebar.radio("Sélectionnez une section", sections)
 
-st.title("Watchlist - Style Google Finance")
-
-import streamlit as st
-import yfinance as yf
-import plotly.graph_objects as go
-
 # --- CSS pour style Google Finance-like ---
 st.markdown("""
 <style>
@@ -261,7 +244,7 @@ def display_watchlist(watchlist_name):
             new_ticker = new_ticker.strip().upper()
             if new_ticker not in st.session_state[watchlist_name]:
                 st.session_state[watchlist_name].append(new_ticker)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.warning(f"{new_ticker} est déjà dans {watchlist_name}.")
 
@@ -305,7 +288,7 @@ def display_watchlist(watchlist_name):
 
 # --- Gestion suppression via query params pour simuler suppression bouton ---
 # Simple gestion pour demo: si utilisateur clique sur "x", on supprime le ticker
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 del_param = query_params.get("del")
 if del_param:
     try:
@@ -313,22 +296,20 @@ if del_param:
         index = int(index_str)
         if watchlist_id in st.session_state and 0 <= index < len(st.session_state[watchlist_id]):
             st.session_state[watchlist_id].pop(index)
-            st.experimental_set_query_params()  # reset URL pour éviter suppressions multiples
-            st.experimental_rerun()
+            st.query_params.clear()  # reset URL pour éviter suppressions multiples
+            st.rerun()
     except Exception:
         pass
 
-# --- Affichage onglets ---
-tab1, tab2 = st.tabs(["Watchlist 1", "Watchlist 2"])
-
-with tab1:
+# Gestion des sections
+if selected_section == "Watchlist1":
+    st.title("Watchlist - Style Google Finance")
     display_watchlist("watchlist1")
 
-with tab2:
+elif selected_section == "Watchlist2":
+    st.title("Watchlist - Style Google Finance")
     display_watchlist("watchlist2")
 
-
-# Section 2: Analyse du Marché
 elif selected_section == "Analyse du Marché":
     st.markdown('<div class="section-header">Analyse du Marché</div>', unsafe_allow_html=True)
     
@@ -352,7 +333,6 @@ elif selected_section == "Analyse du Marché":
         except Exception as e:
             display_message("error", f"Erreur lors de l'analyse: {e}")
 
-# Section 3: Calcul de l'Impôt
 elif selected_section == "Calcul de l'Impôt":
     st.markdown('<div class="section-header">Calcul de l\'Impôt</div>', unsafe_allow_html=True)
 
@@ -381,7 +361,7 @@ elif selected_section == "Calcul de l'Impôt":
             impot = plus_value * taux
             display_message("success", f"Plus-value: {plus_value:.2f} € | Impôt: {impot:.2f} €")
             st.session_state.transactions.append({
-                "Symbole": ticker,
+                "Symbole": ticker if 'ticker' in locals() else "N/A",
                 "Pays": pays,
                 "Prix Achat": achat,
                 "Prix Vente": vente,
@@ -392,7 +372,6 @@ elif selected_section == "Calcul de l'Impôt":
         except Exception as e:
             display_message("error", f"Erreur de calcul: {e}")
 
-# Section 4: Gestion des Transactions
 elif selected_section == "Gestion des Transactions":
     st.markdown('<div class="section-header">Gestion des Transactions</div>', unsafe_allow_html=True)
     
@@ -456,6 +435,8 @@ elif selected_section == "Gestion des Transactions":
             display_message("warning", "Données incomplètes pour générer le graphique.")
     else:
         display_message("info", "Aucune transaction enregistrée.")
+    
+   
     
     # Bilan Fiscal Global
     st.markdown('<div class="sub-header">Bilan Fiscal Global</div>', unsafe_allow_html=True)
