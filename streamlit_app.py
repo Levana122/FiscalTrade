@@ -372,17 +372,16 @@ if st.button("Afficher Indicateur"):
     except Exception as e:
         st.error(f"Erreur lors de l'affichage de l'indicateur: {e}")
 
-# Priority search: sector > keyword > symbol
-sector_queries = {
-    "Crypto": "bitcoin OR crypto OR ethereum",
-    "Technology": "Google OR Apple OR Microsoft OR AI OR Nvidia",
-    "Energy": "oil OR gas OR energy OR Total",
-    "Banks": "banks OR rates OR bonds OR BNP",
-    "Health": "pharma OR health OR biotech",
-    "Automotive": "Tesla OR cars OR batteries OR Ford",
-    "Luxury": "LVMH OR Kering OR Hermès"
-
-
+def fetch_news(symbol, keyword, sector, start_date):
+    # Priority search: sector > keyword > symbol
+    sector_queries = {
+        "Crypto": "bitcoin OR crypto OR ethereum",
+        "Technology": "Google OR Apple OR Microsoft OR AI OR Nvidia",
+        "Energy": "oil OR gas OR energy OR Total",
+        "Banks": "banks OR rates OR bonds OR BNP",
+        "Health": "pharma OR health OR biotech",
+        "Automotive": "Tesla OR cars OR batteries OR Ford",
+        "Luxury": "LVMH OR Kering OR Hermès"
     }
     if sector and sector != "None":
         params["query"] = sector_queries.get(sector, "")
@@ -404,6 +403,7 @@ sector_queries = {
             "url": "#",
             "published_at": ""
         }]
+
 # Call
 articles = fetch_news(symbol.upper(), keyword, sector, start_date)
 # Display
