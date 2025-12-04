@@ -138,7 +138,8 @@ st.markdown('<div class="main-header">FiscalTrade - Application de Gestion Finan
 # Sidebar pour la navigation
 st.sidebar.title("Navigation")
 sections = [
-    "Watchlist",
+    "Watchlist1",
+    "Watchlist2",
     "Analyse du Marché",
     "Calcul de l'Impôt",
     "Gestion des Transactions",
@@ -151,90 +152,52 @@ selected_section = st.sidebar.radio("Sélectionnez une section", sections)
 
 st.title("Watchlist - Style Google Finance")
 
-# --- Style CSS ---
+import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+
+# --- CSS pour style Google Finance-like ---
 st.markdown("""
 <style>
-/* Input search box style */
-.search-box {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto 30px auto;
-    display: flex;
-    gap: 10px;
-}
-.search-input > div > div > input {
-    border-radius: 30px !important;
-    padding: 12px 20px !important;
-    border: 1px solid #ddd !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    font-size: 16px !important;
-}
-.search-button > button {
-    background-color: #1a73e8;
-    border-radius: 30px;
-    color: white;
-    font-weight: 600;
-    padding: 12px 25px;
-    border: none !important;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-.search-button > button:hover {
-    background-color: #1558b0;
-}
-
-/* Container for watchlist items */
 .watchlist-container {
-    max-width: 750px;
-    margin: 0 auto;
+    max-width: 900px;
+    margin: 0 auto 40px auto;
     font-family: "Roboto", sans-serif;
     font-size: 14px;
 }
-
-/* Each watchlist row */
 .watchlist-row {
     display: flex;
     align-items: center;
     border-bottom: 1px solid #eee;
     padding: 15px 0;
 }
-
-/* Ticker symbol badge */
 .ticker-badge {
     font-weight: 700;
     font-size: 13px;
     color: white;
-    background-color: #202124;
     border-radius: 4px;
-    padding: 4px 8px;
-    margin-right: 10px;
-    width: 60px;
+    padding: 4px 10px;
+    margin-right: 12px;
+    width: 70px;
     text-align: center;
+    background-color: #202124;
 }
-
-/* Company name text */
 .company-name {
     flex: 1 1 auto;
     color: #3c4043;
     font-weight: 500;
 }
-
-/* Price */
 .price {
     width: 90px;
     text-align: right;
     font-weight: 600;
     color: #202124;
 }
-
-/* Absolute change positive/negative */
 .abs-change {
-    width: 85px;
+    width: 90px;
     text-align: right;
     font-weight: 600;
 }
-
-/* Percentage change pill */
 .pct-change {
     width: 70px;
     text-align: center;
@@ -244,19 +207,14 @@ st.markdown("""
     margin-left: 15px;
     font-size: 13px;
 }
-
-/* Positive and negative styles */
 .positive {
     color: #137333;
     background-color: #d7f4d7;
 }
-
 .negative {
     color: #a50e0e;
     background-color: #fbd7d7;
 }
-
-/* Add button style */
 .add-button {
     margin-left: 20px;
     background: none;
@@ -275,192 +233,100 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Initialize or restore watchlist ---
-if "watchlist1" not in st.session_state:
-    st.session_state.watchlist = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
-
+# --- Fonction utilitaire pour récupérer nom entreprise ---
 def get_company_name(ticker):
     try:
         info = yf.Ticker(ticker).info
-        name = info.get("shortName") or info.get("longName") or ticker
-        return name
+        return info.get("shortName") or info.get("longName") or ticker
     except:
         return ticker
 
-# Search and add new ticker input UI
-cols = st.columns([4,1])
-with cols[0]:
-    new_symbol = st.text_input("Recherchez des actions, des FNB et plus encore", key="input_ticker", placeholder="Ex: AAPL, TSLA")
-with cols[1]:
-    if st.button("Ajouter à la liste") and new_symbol:
-        new_sym_upper = new_symbol.strip().upper()
-        if new_sym_upper not in st.session_state.watchlist:
-            st.session_state.watchlist.append(new_sym_upper)
-            st.experimental_rerun()
-        else:
-            st.warning(f"{new_sym_upper} est déjà dans la liste")
+# --- Initialisation watchlists dans session state ---
+if "watchlist1" not in st.session_state:
+    st.session_state.watchlist1 = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 
-# Main container for watchlist
-st.markdown('<div class="watchlist-container">', unsafe_allow_html=True)
+if "watchlist2" not in st.session_state:
+    st.session_state.watchlist2 = ["RNO", "GLE", "BNP", "SAN", "TSLA"]
 
-for i, sym in enumerate(st.session_state.watchlist):
-    try:
-        ticker = yf.Ticker(sym)
-        price = ticker.info.get("regularMarketPrice", None)
-        prev_close = ticker.info.get("regularMarketPreviousClose", None)
-        if price is None or prev_close is None:
-            price_text = "N/A"
-            abs_change_text = "N/A"
-            pct_change_text = "N/A"
-            pct_class = ""
-        else:
-            price_text = f"{price:.2f} $"
-            abs_change = price - prev_close
-            abs_change_text = f"{abs_change:+.2f} $"
-            pct_change = (abs_change / prev_close) * 100
-            pct_change_text = f"{pct_change:+.2f} %"
-            pct_class = "positive" if abs_change >= 0 else "negative"
-        
-        company_name = get_company_name(sym)
-        
-        # Render each row
-        st.markdown(f'''
-        <div class="watchlist-row">
-            <div class="ticker-badge">{sym}</div>
-            <div class="company-name" title="{company_name}">{company_name}</div>
-            <div class="price">{price_text}</div>
-            <div class="abs-change">{abs_change_text}</div>
-            <div class="pct-change {pct_class}">{pct_change_text}</div>
-            <button class="add-button" title="Ajouter"><span>+</span></button>
-        </div>
-        ''', unsafe_allow_html=True)
-    except Exception as e:
-        st.warning(f"Erreur pour {sym}: {e}")
+# --- Fonction pour afficher une watchlist (affichage propre) ---
+def display_watchlist(watchlist_name):
+    st.markdown(f"## Watchlist: {watchlist_name}")
 
-st.markdown("</div>", unsafe_allow_html=True)
-
-# Section 1: Watchlist
-if selected_section == "Watchlist":
-    st.markdown('<div class="section-header">Watchlist</div>', unsafe_allow_html=True)
-    
-    # Initialisation de la watchlist avec actions par défaut
-    default_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
-    if "watchlist" not in st.session_state:
-        st.session_state.watchlist = [{"ticker": t} for t in default_tickers]
-    
-    # Ajouter ou rechercher un ticker
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        new_ticker = st.text_input("Rechercher ou ajouter un ticker (ex: AAPL, BTC-USD)", key="watch_add")
-    with col2:
-        if st.button("Ajouter à la watchlist") and new_ticker:
-            new_ticker = new_ticker.upper()
-            if new_ticker not in [t['ticker'] for t in st.session_state.watchlist]:
-                st.session_state.watchlist.append({"ticker": new_ticker})
-                display_message("success", f"{new_ticker} ajouté à la watchlist")
-            else:
-                display_message("warning", "Déjà présent dans la watchlist")
-    
-
-# -- Définition fonction en dehors des blocs conditionnels --
-
-def plot_sparkline(data):
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=data.index,
-        y=data['Close'],
-        mode="lines",
-        line=dict(color="#d62728", width=2),
-        fill='tozeroy',
-        fillcolor='rgba(214,39,40,0.15)',
-        showlegend=False,
-        hoverinfo='none'
-    ))
-    fig.update_layout(
-        margin=dict(l=0, r=0, t=0, b=0),
-        height=30,
-        width=200,
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
-    )
-    return fig
-
-# -- Initialisation watchlist avant blocs conditionnels --
-
-default_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
-if "watchlist" not in st.session_state:
-    st.session_state.watchlist = list(default_tickers)  # liste de strings simple
-
-# -- Bloc principal conditionnel --
-
-if selected_section == "Watchlist":
-    st.markdown('<div class="section-header">Watchlist</div>', unsafe_allow_html=True)
-    
-    # Ajout ticker
+    # Input + bouton d'ajout dans une ligne
     col1, col2 = st.columns([4,1])
     with col1:
-        new_ticker = st.text_input("Rechercher ou ajouter un ticker (ex: AAPL, BTC-USD)", key="watch_add")
+        new_ticker = st.text_input(f"Ajouter un ticker à {watchlist_name}", key=f"input_{watchlist_name}")
     with col2:
-        if st.button("Ajouter à la watchlist") and new_ticker:
-            new_ticker = new_ticker.upper()
-            if new_ticker not in st.session_state.watchlist:
-                st.session_state.watchlist.append(new_ticker)
-                st.success(f"{new_ticker} ajouté à la watchlist")
-            else:
-                st.warning("Déjà présent dans la watchlist")
-    
-    # Affichage watchlist
-    for i, ticker in enumerate(st.session_state.watchlist):
-        try:
-            data = yf.Ticker(ticker).history(period="7d")
-            if data.empty:
-                st.warning(f"Aucune donnée pour {ticker}")
-                continue
-            
-            prix = data['Close'].iloc[-1]
-            prix_prec = data['Close'].iloc[-2] if len(data['Close']) > 1 else prix
-            variation = ((prix - prix_prec) / prix_prec) * 100 if prix_prec else 0
-            variation_str = f"{variation:+.2f} %"
-            couleur = "#137333" if variation >= 0 else "#a50e0e"
-            symb = "▲" if variation >= 0 else "▼"
-
-            # Colonnes
-            col1, col2, col3, col4, col5 = st.columns([1,3,1,1,0.5], gap="small")
-
-            col1.markdown(f"**{ticker}**")
-            col2.plotly_chart(plot_sparkline(data), use_container_width=True)
-            col3.markdown(f"{prix:.2f} $")
-            col4.markdown(f"<span style='color:{couleur}; font-weight:bold;'>{symb} {variation_str}</span>", unsafe_allow_html=True)
-            if col5.button("Supprimer", key=f"del_{i}"):
-                st.session_state.watchlist.pop(i)
+        if st.button(f"Ajouter", key=f"btn_add_{watchlist_name}") and new_ticker:
+            new_ticker = new_ticker.strip().upper()
+            if new_ticker not in st.session_state[watchlist_name]:
+                st.session_state[watchlist_name].append(new_ticker)
                 st.experimental_rerun()
-
-        except Exception as e:
-            st.error(f"Erreur avec {ticker} : {e}")
-
-elif selected_section == "Analyse du Marché":
-    st.markdown('<div class="section-header">Analyse du Marché</div>', unsafe_allow_html=True)
-    ticker_input = st.text_input("Ticker", value="AAPL")
-    date_debut = st.date_input("Date d'achat", value=date(2024, 1, 1))
-    date_fin = st.date_input("Date de vente", value=date.today())
-
-    if st.button("Analyser"):
-        try:
-            data = yf.download(ticker_input, start=str(date_debut), end=str(date_fin), auto_adjust=False)
-            if not data.empty:
-                prix_debut = data['Close'].dropna().iloc[0]
-                prix_fin = data['Close'].dropna().iloc[-1]
-                variation = ((prix_fin - prix_debut) / prix_debut) * 100
-                tendance = "Hausse" if variation > 0 else ("Baisse" if variation < 0 else "Stable")
-                st.success(f"Analyse de {ticker_input} de {date_debut} à {date_fin}")
-                st.info(f"Prix initial: {prix_debut:.2f} $ | Final: {prix_fin:.2f} $ | Variation: {variation:.2f}% | {tendance}")
-                st.line_chart(data['Close'])
             else:
-                st.warning("Aucune donnée disponible.")
+                st.warning(f"{new_ticker} est déjà dans {watchlist_name}.")
+
+    st.markdown('<div class="watchlist-container">', unsafe_allow_html=True)
+
+    for i, sym in enumerate(st.session_state[watchlist_name]):
+        try:
+            ticker_obj = yf.Ticker(sym)
+            price = ticker_obj.info.get("regularMarketPrice", None)
+            prev_close = ticker_obj.info.get("regularMarketPreviousClose", None)
+            if price is None or prev_close is None:
+                price_text = "N/A"
+                abs_change_text = "N/A"
+                pct_change_text = "N/A"
+                pct_class = ""
+            else:
+                price_text = f"{price:.2f} $"
+                abs_change = price - prev_close
+                abs_change_text = f"{abs_change:+.2f} $"
+                pct_change = (abs_change / prev_close) * 100
+                pct_change_text = f"{pct_change:+.2f} %"
+                pct_class = "positive" if abs_change >= 0 else "negative"
+            
+            company_name = get_company_name(sym)
+            
+            # Rendu html par ligne
+            st.markdown(f'''
+            <div class="watchlist-row">
+                <div class="ticker-badge">{sym}</div>
+                <div class="company-name" title="{company_name}">{company_name}</div>
+                <div class="price">{price_text}</div>
+                <div class="abs-change">{abs_change_text}</div>
+                <div class="pct-change {pct_class}">{pct_change_text}</div>
+                <button class="add-button" title="Supprimer" onclick="window.location.href=window.location.href + '?del={watchlist_name}_{i}'">×</button>
+            </div>
+            ''', unsafe_allow_html=True)
         except Exception as e:
-            st.error(f"Erreur lors de l'analyse: {e}")
+            st.warning(f"Erreur pour {sym}: {e}")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- Gestion suppression via query params pour simuler suppression bouton ---
+# Simple gestion pour demo: si utilisateur clique sur "x", on supprime le ticker
+query_params = st.experimental_get_query_params()
+del_param = query_params.get("del")
+if del_param:
+    try:
+        watchlist_id, index_str = del_param[0].split("_")
+        index = int(index_str)
+        if watchlist_id in st.session_state and 0 <= index < len(st.session_state[watchlist_id]):
+            st.session_state[watchlist_id].pop(index)
+            st.experimental_set_query_params()  # reset URL pour éviter suppressions multiples
+            st.experimental_rerun()
+    except Exception:
+        pass
+
+# --- Affichage onglets ---
+tab1, tab2 = st.tabs(["Watchlist 1", "Watchlist 2"])
+
+with tab1:
+    display_watchlist("watchlist1")
+
+with tab2:
+    display_watchlist("watchlist2")
+
 
 # Section 2: Analyse du Marché
 elif selected_section == "Analyse du Marché":
