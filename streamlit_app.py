@@ -364,12 +364,12 @@ elif page == "Rapports":
                     fig.add_trace(go.Scatter(x=df.index, y=df['MACD'], name="MACD"))
                     fig.add_trace(go.Scatter(x=df.index, y=df['Signal'], name="Signal MACD"))
                 elif indicateur == "Bollinger Bands":
-                    fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Upper'], name="Upper Band"))
-                    fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Lower'], name="Lower Band"))
+                    fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Upper'], name="Bollinger Upper"))
+                    fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Lower'], name="Bollinger Lower"))
                     fig.add_trace(go.Scatter(x=df.index, y=df['SMA_20'], name="SMA 20"))
-                    st.plotly_chart(fig)
-        "published_after": start_date.strftime("%Y-%m-%d")
-    
+                
+                st.plotly_chart(fig)
+
     # Priority search: sector > keyword > symbol
     sector_queries = {
         "Crypto": "bitcoin OR crypto OR ethereum",
