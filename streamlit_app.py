@@ -11,6 +11,10 @@ import ssl
 import streamlit as st
 import yfinance as yf
 import requests
+import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+from datetime import date
 
 from datetime import datetime, date
 from fpdf import FPDF
@@ -357,10 +361,8 @@ if selected_section == "Watchlist":
             else:
                 display_message("warning", "Déjà présent dans la watchlist")
     
-    # Fonction pour tracer un sparkline
-    import streamlit as st
-import yfinance as yf
-import plotly.graph_objects as go
+
+# -- Définition fonction en dehors des blocs conditionnels --
 
 def plot_sparkline(data):
     fig = go.Figure()
@@ -385,39 +387,80 @@ def plot_sparkline(data):
     )
     return fig
 
-st.header("Watchlist")
+# -- Initialisation watchlist avant blocs conditionnels --
 
-# Exemple watchlist (remplacer par ta session_state ou autre)
+default_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 if "watchlist" not in st.session_state:
-    st.session_state.watchlist = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+    st.session_state.watchlist = list(default_tickers)  # liste de strings simple
 
-for i, ticker in enumerate(st.session_state.watchlist):
-    try:
-        data = yf.Ticker(ticker).history(period="7d")
-        if data.empty:
-            st.warning(f"Aucune donnée pour {ticker}")
-            continue
+# -- Bloc principal conditionnel --
 
-        prix = data['Close'].iloc[-1]
-        prix_prec = data['Close'].iloc[-2] if len(data['Close']) > 1 else prix
-        variation = ((prix - prix_prec) / prix_prec) * 100 if prix_prec else 0
-        variation_str = f"{variation:+.2f} %"
-        couleur = "#137333" if variation >=0 else "#a50e0e"
-        symb = "▲" if variation >=0 else "▼"
+if selected_section == "Watchlist":
+    st.markdown('<div class="section-header">Watchlist</div>', unsafe_allow_html=True)
+    
+    # Ajout ticker
+    col1, col2 = st.columns([4,1])
+    with col1:
+        new_ticker = st.text_input("Rechercher ou ajouter un ticker (ex: AAPL, BTC-USD)", key="watch_add")
+    with col2:
+        if st.button("Ajouter à la watchlist") and new_ticker:
+            new_ticker = new_ticker.upper()
+            if new_ticker not in st.session_state.watchlist:
+                st.session_state.watchlist.append(new_ticker)
+                st.success(f"{new_ticker} ajouté à la watchlist")
+            else:
+                st.warning("Déjà présent dans la watchlist")
+    
+    # Affichage watchlist
+    for i, ticker in enumerate(st.session_state.watchlist):
+        try:
+            data = yf.Ticker(ticker).history(period="7d")
+            if data.empty:
+                st.warning(f"Aucune donnée pour {ticker}")
+                continue
+            
+            prix = data['Close'].iloc[-1]
+            prix_prec = data['Close'].iloc[-2] if len(data['Close']) > 1 else prix
+            variation = ((prix - prix_prec) / prix_prec) * 100 if prix_prec else 0
+            variation_str = f"{variation:+.2f} %"
+            couleur = "#137333" if variation >= 0 else "#a50e0e"
+            symb = "▲" if variation >= 0 else "▼"
 
-        # Mise en page lignes watchlist avec colonnes
-        col1, col2, col3, col4, col5 = st.columns([1, 3, 1, 1, 0.5], gap="small")
+            # Colonnes
+            col1, col2, col3, col4, col5 = st.columns([1,3,1,1,0.5], gap="small")
 
-        col1.markdown(f"**{ticker}**")
-        col2.plotly_chart(plot_sparkline(data), use_container_width=True)
-        col3.markdown(f"{prix:.2f} $")
-        col4.markdown(f"<span style='color:{couleur}; font-weight:bold;'>{symb} {variation_str}</span>", unsafe_allow_html=True)
-        if col5.button("Supprimer", key=f"del_{i}"):
-            st.session_state.watchlist.pop(i)
-            st.experimental_rerun()
+            col1.markdown(f"**{ticker}**")
+            col2.plotly_chart(plot_sparkline(data), use_container_width=True)
+            col3.markdown(f"{prix:.2f} $")
+            col4.markdown(f"<span style='color:{couleur}; font-weight:bold;'>{symb} {variation_str}</span>", unsafe_allow_html=True)
+            if col5.button("Supprimer", key=f"del_{i}"):
+                st.session_state.watchlist.pop(i)
+                st.experimental_rerun()
 
-    except Exception as e:
-        st.error(f"Erreur avec {ticker} : {e}")
+        except Exception as e:
+            st.error(f"Erreur avec {ticker} : {e}")
+
+elif selected_section == "Analyse du Marché":
+    st.markdown('<div class="section-header">Analyse du Marché</div>', unsafe_allow_html=True)
+    ticker_input = st.text_input("Ticker", value="AAPL")
+    date_debut = st.date_input("Date d'achat", value=date(2024, 1, 1))
+    date_fin = st.date_input("Date de vente", value=date.today())
+
+    if st.button("Analyser"):
+        try:
+            data = yf.download(ticker_input, start=str(date_debut), end=str(date_fin), auto_adjust=False)
+            if not data.empty:
+                prix_debut = data['Close'].dropna().iloc[0]
+                prix_fin = data['Close'].dropna().iloc[-1]
+                variation = ((prix_fin - prix_debut) / prix_debut) * 100
+                tendance = "Hausse" if variation > 0 else ("Baisse" if variation < 0 else "Stable")
+                st.success(f"Analyse de {ticker_input} de {date_debut} à {date_fin}")
+                st.info(f"Prix initial: {prix_debut:.2f} $ | Final: {prix_fin:.2f} $ | Variation: {variation:.2f}% | {tendance}")
+                st.line_chart(data['Close'])
+            else:
+                st.warning("Aucune donnée disponible.")
+        except Exception as e:
+            st.error(f"Erreur lors de l'analyse: {e}")
 
 # Section 2: Analyse du Marché
 elif selected_section == "Analyse du Marché":
