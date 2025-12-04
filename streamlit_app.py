@@ -243,8 +243,8 @@ elif selected_section == "Analyse du Marché":
 
 # Section 3: Calcul de l'Impôt
 elif selected_section == "Calcul de l'Impôt":
-    st.markdown('<div class="section-header">Calcul de l'Impôt</div>', unsafe_allow_html=True)
-    
+    st.markdown('<div class="section-header">Calcul de l\'Impôt</div>', unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
     with col1:
         pays = st.selectbox("Pays", ["France", "USA", "UK", "Autre"])
