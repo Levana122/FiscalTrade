@@ -7,4 +7,6 @@ fpdf
 plotly
 scikit-learn
 openpyxl
+matplotlib
+
 
