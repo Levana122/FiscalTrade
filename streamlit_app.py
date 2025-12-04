@@ -276,7 +276,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Initialize or restore watchlist ---
-if "watchlist" not in st.session_state:
+if "watchlist1" not in st.session_state:
     st.session_state.watchlist = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 
 def get_company_name(ticker):
