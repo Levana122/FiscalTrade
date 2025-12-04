@@ -368,3 +368,46 @@ elif page == "Rapports":
                     fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Lower'], name="Lower Band"))
                     fig.add_trace(go.Scatter(x=df.index, y=df['SMA_20'], name="SMA 20"))
                     st.plotly_chart(fig)
+        "published_after": start_date.strftime("%Y-%m-%d")
+    }
+    # Priority search: sector > keyword > symbol
+    sector_queries = {
+        "Crypto": "bitcoin OR crypto OR ethereum",
+        "Technology": "Google OR Apple OR Microsoft OR AI OR Nvidia",
+        "Energy": "oil OR gas OR energy OR Total",
+        "Banks": "banks OR rates OR bonds OR BNP",
+        "Health": "pharma OR health OR biotech",
+        "Automotive": "Tesla OR cars OR batteries OR Ford",
+        "Luxury": "LVMH OR Kering OR Hermès"
+    }
+    if sector and sector != "None":
+        params["query"] = sector_queries.get(sector, "")
+    elif keyword:
+        params["query"] = keyword
+    elif symbol:
+        params["symbols"] = symbol
+    try:
+        response = requests.get("https://api.marketaux.com/v1/news/all", params=params)
+        data = response.json()
+        if "data" in data and data["data"]:
+            return data["data"]
+        else:
+            return []
+    except Exception as e:
+        return [{
+            "title": "Retrieval Error",
+            "description": str(e),
+            "url": "#",
+            "published_at": ""
+        }]
+# Call
+articles = fetch_news(symbol.upper(), keyword, sector, start_date)
+# Display
+if articles:
+    for article in articles:
+        st.markdown(f"### [{article['title']}]({article['url']})")
+        st.write(f"Published: {article['published_at'][:10]}")
+        st.write(article['description'][:300] + "...")
+        st.markdown("---")
+else:
+    st.info("No news found for this filter.")
