@@ -369,7 +369,7 @@ elif page == "Rapports":
                     fig.add_trace(go.Scatter(x=df.index, y=df['SMA_20'], name="SMA 20"))
                     st.plotly_chart(fig)
         "published_after": start_date.strftime("%Y-%m-%d")
-    }
+    
     # Priority search: sector > keyword > symbol
     sector_queries = {
         "Crypto": "bitcoin OR crypto OR ethereum",
