@@ -347,38 +347,42 @@ elif page == "Rapports":
         st.info("Aucune transaction enregistree.")
     
     st.header("Indicateurs Techniques")
-    ticker_chart = st.text_input("Ticker pour indicateurs", value="AAPL")
-    indicateur = st.selectbox("Choisir indicateur", ["RSI", "MACD", "Bollinger Bands"])
-    if st.button("Afficher Indicateur"):
-        try:
-            df = yf.download(ticker_chart, start="2023-01-01", end=str(date.today()))
-            if df.empty or 'Close' not in df.columns:
-                st.warning("Donnees indisponibles.")
-            else:
-                df = calculer_indicateurs_avances(df)
-                fig = go.Figure()
-                if indicateur == "RSI":
-                    fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI"))
-                    fig.update_yaxes(range=[0, 100])
-                elif indicateur == "MACD":
-                    fig.add_trace(go.Scatter(x=df.index, y=df['MACD'], name="MACD"))
-                    fig.add_trace(go.Scatter(x=df.index, y=df['Signal'], name="Signal MACD"))
-                elif indicateur == "Bollinger Bands":
-                    fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Upper'], name="Bollinger Upper"))
-                    fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Lower'], name="Bollinger Lower"))
-                    fig.add_trace(go.Scatter(x=df.index, y=df['SMA_20'], name="SMA 20"))
-                
-                st.plotly_chart(fig)
+ticker_chart = st.text_input("Ticker pour indicateurs", value="AAPL")
+indicateur = st.selectbox("Choisir indicateur", ["RSI", "MACD", "Bollinger Bands"])
+if st.button("Afficher Indicateur"):
+    try:
+        df = yf.download(ticker_chart, start="2023-01-01", end=str(date.today()))
+        if df.empty or 'Close' not in df.columns:
+            st.warning("Donnees indisponibles.")
+        else:
+            df = calculer_indicateurs_avances(df)
+            fig = go.Figure()
+            if indicateur == "RSI":
+                fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name="RSI"))
+                fig.update_yaxes(range=[0, 100])
+            elif indicateur == "MACD":
+                fig.add_trace(go.Scatter(x=df.index, y=df['MACD'], name="MACD"))
+                fig.add_trace(go.Scatter(x=df.index, y=df['Signal'], name="Signal MACD"))
+            elif indicateur == "Bollinger Bands":
+                fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Upper'], name="Bollinger Upper"))
+                fig.add_trace(go.Scatter(x=df.index, y=df['Bollinger_Lower'], name="Bollinger Lower"))
+                fig.add_trace(go.Scatter(x=df.index, y=df['SMA_20'], name="SMA 20"))
+            
+            st.plotly_chart(fig)
+    except Exception as e:
+        st.error(f"Erreur lors de l'affichage de l'indicateur: {e}")
 
-    # Priority search: sector > keyword > symbol
+# Priority search: sector > keyword > symbol
 sector_queries = {
-        "Crypto": "bitcoin OR crypto OR ethereum",
-        "Technology": "Google OR Apple OR Microsoft OR AI OR Nvidia",
-        "Energy": "oil OR gas OR energy OR Total",
-        "Banks": "banks OR rates OR bonds OR BNP",
-        "Health": "pharma OR health OR biotech",
-        "Automotive": "Tesla OR cars OR batteries OR Ford",
-        "Luxury": "LVMH OR Kering OR Hermès"
+    "Crypto": "bitcoin OR crypto OR ethereum",
+    "Technology": "Google OR Apple OR Microsoft OR AI OR Nvidia",
+    "Energy": "oil OR gas OR energy OR Total",
+    "Banks": "banks OR rates OR bonds OR BNP",
+    "Health": "pharma OR health OR biotech",
+    "Automotive": "Tesla OR cars OR batteries OR Ford",
+    "Luxury": "LVMH OR Kering OR Hermès"
+
+
     }
     if sector and sector != "None":
         params["query"] = sector_queries.get(sector, "")
