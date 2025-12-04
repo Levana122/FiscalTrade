@@ -358,57 +358,66 @@ if selected_section == "Watchlist":
                 display_message("warning", "Déjà présent dans la watchlist")
     
     # Fonction pour tracer un sparkline
-    def plot_sparkline(data):
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=data.index,
-            y=data['Close'],
-            line=dict(color='crimson', width=2),
-            fill='tozeroy',
-            fillcolor='rgba(220, 20, 60, 0.1)',
-            mode='lines',
-            showlegend=False
-        ))
-        fig.update_layout(
-            height=40,
-            width=150,
-            margin=dict(l=0, r=0, t=0, b=0),
-            xaxis=dict(visible=False),
-            yaxis=dict(visible=False),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
-        return fig
-    
-    # Affichage de la watchlist
-    if st.session_state.watchlist:
-        for i, item in enumerate(st.session_state.watchlist):
-            ticker = item['ticker']
-            try:
-                data = yf.Ticker(ticker).history(period="7d")
-                if data.empty:
-                    display_message("warning", f"Aucune donnée pour {ticker}")
-                    continue
-                
-                price = data['Close'].iloc[-1]
-                prev_price = data['Close'].iloc[-2] if len(data['Close']) > 1 else price
-                change = ((price - prev_price) / prev_price) * 100 if prev_price else 0
-                change_text = f"{change:+.2f} %"
-                color = "green" if change >= 0 else "red"
-                symbol = "▲" if change >= 0 else "▼"
-                
-                col1, col2, col3, col4, col5 = st.columns([1, 2.5, 1, 1, 0.5])
-                col1.markdown(f"**{ticker}**")
-                col2.plotly_chart(plot_sparkline(data), use_container_width=True)
-                col3.markdown(f"<span style='font-size: 14px;'>{price:.2f} $</span>", unsafe_allow_html=True)
-                col4.markdown(f"<span style='color:{color}; font-size: 14px;'>{symbol} {change_text}</span>", unsafe_allow_html=True)
-                if col5.button("Supprimer", key=f"del_{i}"):
-                    st.session_state.watchlist.pop(i)
-                    st.experimental_rerun()
-            except Exception as e:
-                display_message("error", f"Erreur pour {ticker}: {e}")
-    else:
-        display_message("info", "Aucun actif surveillé.")
+    import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+
+def plot_sparkline(data):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=data.index,
+        y=data['Close'],
+        mode="lines",
+        line=dict(color="#d62728", width=2),
+        fill='tozeroy',
+        fillcolor='rgba(214,39,40,0.15)',
+        showlegend=False,
+        hoverinfo='none'
+    ))
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=30,
+        width=200,
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+    return fig
+
+st.header("Watchlist")
+
+# Exemple watchlist (remplacer par ta session_state ou autre)
+if "watchlist" not in st.session_state:
+    st.session_state.watchlist = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+
+for i, ticker in enumerate(st.session_state.watchlist):
+    try:
+        data = yf.Ticker(ticker).history(period="7d")
+        if data.empty:
+            st.warning(f"Aucune donnée pour {ticker}")
+            continue
+
+        prix = data['Close'].iloc[-1]
+        prix_prec = data['Close'].iloc[-2] if len(data['Close']) > 1 else prix
+        variation = ((prix - prix_prec) / prix_prec) * 100 if prix_prec else 0
+        variation_str = f"{variation:+.2f} %"
+        couleur = "#137333" if variation >=0 else "#a50e0e"
+        symb = "▲" if variation >=0 else "▼"
+
+        # Mise en page lignes watchlist avec colonnes
+        col1, col2, col3, col4, col5 = st.columns([1, 3, 1, 1, 0.5], gap="small")
+
+        col1.markdown(f"**{ticker}**")
+        col2.plotly_chart(plot_sparkline(data), use_container_width=True)
+        col3.markdown(f"{prix:.2f} $")
+        col4.markdown(f"<span style='color:{couleur}; font-weight:bold;'>{symb} {variation_str}</span>", unsafe_allow_html=True)
+        if col5.button("Supprimer", key=f"del_{i}"):
+            st.session_state.watchlist.pop(i)
+            st.experimental_rerun()
+
+    except Exception as e:
+        st.error(f"Erreur avec {ticker} : {e}")
 
 # Section 2: Analyse du Marché
 elif selected_section == "Analyse du Marché":
