@@ -371,7 +371,7 @@ elif page == "Rapports":
                 st.plotly_chart(fig)
 
     # Priority search: sector > keyword > symbol
-    sector_queries = {
+sector_queries = {
         "Crypto": "bitcoin OR crypto OR ethereum",
         "Technology": "Google OR Apple OR Microsoft OR AI OR Nvidia",
         "Energy": "oil OR gas OR energy OR Total",
