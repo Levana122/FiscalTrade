@@ -265,44 +265,44 @@ def display_watchlist(watchlist_name):
             price, prev_close = get_ticker_data(sym)
             company_name = get_company_name(sym)
             
-        if price is None or prev_close is None:
-            price_text = "N/A"
-            abs_change_text = "N/A"
-            pct_change_text = "N/A"
-            pct_class = ""
-        else:
-            price_text = f"{price:.2f} $"
-            abs_change = price - prev_close
-            abs_change_text = f"{abs_change:+.2f} $"
-            pct_change = (abs_change / prev_close) * 100
-            pct_change_text = f"{pct_change:+.2f} %"
-            pct_class = "positive" if abs_change >= 0 else "negative"
-
-        st.markdown(f'''
-        <div class="watchlist-row">
-            <div class="ticker-badge">{sym}</div>
-            <div class="company-name">{company_name}</div>
-            <div class="price">{price_text}</div>
-            <div class="abs-change">{abs_change_text}</div>
-            <div class="pct-change {pct_class}">{pct_change_text}</div>
-        </div>
-        ''', unsafe_allow_html=True)
-    except Exception as e:
-        st.warning(f"Erreur pour {sym}: {e}")
-            
-            # Rendu html par ligne
+            if price is None or prev_close is None:
+                price_text = "N/A"
+                abs_change_text = "N/A"
+                pct_change_text = "N/A"
+                pct_class = ""
+            else:
+                price_text = f"{price:.2f} $"
+                abs_change = price - prev_close
+                abs_change_text = f"{abs_change:+.2f} $"
+                pct_change = (abs_change / prev_close) * 100
+                pct_change_text = f"{pct_change:+.2f} %"
+                pct_class = "positive" if abs_change >= 0 else "negative"
+    
             st.markdown(f'''
             <div class="watchlist-row">
                 <div class="ticker-badge">{sym}</div>
-                <div class="company-name" title="{company_name}">{company_name}</div>
+                <div class="company-name">{company_name}</div>
                 <div class="price">{price_text}</div>
                 <div class="abs-change">{abs_change_text}</div>
                 <div class="pct-change {pct_class}">{pct_change_text}</div>
-                <button class="add-button" title="Supprimer" onclick="window.location.href=window.location.href + '?del={watchlist_name}_{i}'">×</button>
             </div>
             ''', unsafe_allow_html=True)
         except Exception as e:
             st.warning(f"Erreur pour {sym}: {e}")
+                
+                # Rendu html par ligne
+                st.markdown(f'''
+                <div class="watchlist-row">
+                    <div class="ticker-badge">{sym}</div>
+                    <div class="company-name" title="{company_name}">{company_name}</div>
+                    <div class="price">{price_text}</div>
+                    <div class="abs-change">{abs_change_text}</div>
+                    <div class="pct-change {pct_class}">{pct_change_text}</div>
+                    <button class="add-button" title="Supprimer" onclick="window.location.href=window.location.href + '?del={watchlist_name}_{i}'">×</button>
+                </div>
+                ''', unsafe_allow_html=True)
+            except Exception as e:
+                st.warning(f"Erreur pour {sym}: {e}")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
