@@ -127,8 +127,7 @@ st.markdown('<div class="main-header">FiscalTrade - Application de Gestion Finan
 # Sidebar pour la navigation
 st.sidebar.title("Navigation")
 sections = [
-    "Watchlist1",
-    "Watchlist2",
+    "Watchlist",
     "Analyse du Marché",
     "Calcul de l'Impôt",
     "Gestion des Transactions",
@@ -216,20 +215,31 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Fonction utilitaire pour récupérer nom entreprise ---
-def get_company_name(ticker):
+@st.cache_data(ttl=3600)
+def get_company_name(sym):
     try:
-        info = yf.Ticker(ticker).info
-        return info.get("shortName") or info.get("longName") or ticker
+        # fast_info n'a pas le nom donc on garde .info
+        # MAIS on met ttl=3600 donc appelé 1 seule fois par heure
+        # C'est acceptable car le nom change jamais
+        info = yf.Ticker(sym).info
+        return info.get("shortName") or sym
     except:
-        return ticker
+        return sym
+
+@st.cache_data(ttl=60)
+def get_ticker_data(sym):
+    try:
+        fi = yf.Ticker(sym).fast_info
+        price = fi.last_price
+        prev_close = fi.previous_close
+        return price, prev_close
+    except:
+        return None, None
 
 # --- Initialisation watchlists dans session state ---
-if "watchlist1" not in st.session_state:
+if "watchlist" not in st.session_state:
     st.session_state.watchlist1 = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 
-if "watchlist2" not in st.session_state:
-    st.session_state.watchlist2 = ["RNO", "GLE", "BNP", "SAN", "TSLA"]
 
 # --- Fonction pour afficher une watchlist (affichage propre) ---
 def display_watchlist(watchlist_name):
@@ -251,24 +261,34 @@ def display_watchlist(watchlist_name):
     st.markdown('<div class="watchlist-container">', unsafe_allow_html=True)
 
     for i, sym in enumerate(st.session_state[watchlist_name]):
-        try:
-            ticker_obj = yf.Ticker(sym)
-            price = ticker_obj.info.get("regularMarketPrice", None)
-            prev_close = ticker_obj.info.get("regularMarketPreviousClose", None)
-            if price is None or prev_close is None:
-                price_text = "N/A"
-                abs_change_text = "N/A"
-                pct_change_text = "N/A"
-                pct_class = ""
-            else:
-                price_text = f"{price:.2f} $"
-                abs_change = price - prev_close
-                abs_change_text = f"{abs_change:+.2f} $"
-                pct_change = (abs_change / prev_close) * 100
-                pct_change_text = f"{pct_change:+.2f} %"
-                pct_class = "positive" if abs_change >= 0 else "negative"
-            
-            company_name = get_company_name(sym)
+    try:
+        price, prev_close = get_ticker_data(sym)
+        company_name = get_company_name(sym)
+        
+        if price is None or prev_close is None:
+            price_text = "N/A"
+            abs_change_text = "N/A"
+            pct_change_text = "N/A"
+            pct_class = ""
+        else:
+            price_text = f"{price:.2f} $"
+            abs_change = price - prev_close
+            abs_change_text = f"{abs_change:+.2f} $"
+            pct_change = (abs_change / prev_close) * 100
+            pct_change_text = f"{pct_change:+.2f} %"
+            pct_class = "positive" if abs_change >= 0 else "negative"
+
+        st.markdown(f'''
+        <div class="watchlist-row">
+            <div class="ticker-badge">{sym}</div>
+            <div class="company-name">{company_name}</div>
+            <div class="price">{price_text}</div>
+            <div class="abs-change">{abs_change_text}</div>
+            <div class="pct-change {pct_class}">{pct_change_text}</div>
+        </div>
+        ''', unsafe_allow_html=True)
+    except Exception as e:
+        st.warning(f"Erreur pour {sym}: {e}")
             
             # Rendu html par ligne
             st.markdown(f'''
