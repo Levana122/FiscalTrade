@@ -261,10 +261,10 @@ def display_watchlist(watchlist_name):
     st.markdown('<div class="watchlist-container">', unsafe_allow_html=True)
 
     for i, sym in enumerate(st.session_state[watchlist_name]):
-    try:
-        price, prev_close = get_ticker_data(sym)
-        company_name = get_company_name(sym)
-        
+        try:
+            price, prev_close = get_ticker_data(sym)
+            company_name = get_company_name(sym)
+            
         if price is None or prev_close is None:
             price_text = "N/A"
             abs_change_text = "N/A"
