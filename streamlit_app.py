@@ -301,7 +301,7 @@ def display_watchlist(watchlist_name):
                     <div class="pct-change {pct_class}">{pct_change_text}</div>
                     <button class="add-button" title="Supprimer" onclick="window.location.href=window.location.href + '?del={watchlist_name}_{i}'">×</button>
                 </div>
-                ''', unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
             except Exception as e:
                 st.warning(f"Erreur pour {sym}: {e}")
 
