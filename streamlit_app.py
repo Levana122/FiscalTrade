@@ -278,7 +278,7 @@ def display_watchlist(watchlist_name):
                 pct_change_text = f"{pct_change:+.2f} %"
                 pct_class = "positive" if abs_change >= 0 else "negative"
     
-            st.markdown(f'''
+            st.markdown(f"""
             <div class="watchlist-row">
                 <div class="ticker-badge">{sym}</div>
                 <div class="company-name">{company_name}</div>
@@ -286,7 +286,7 @@ def display_watchlist(watchlist_name):
                 <div class="abs-change">{abs_change_text}</div>
                 <div class="pct-change {pct_class}">{pct_change_text}</div>
             </div>
-            ''', unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
     
         except Exception as e:
             st.warning(f"Erreur pour {sym}: {e}")
