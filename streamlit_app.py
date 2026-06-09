@@ -291,7 +291,7 @@ def display_watchlist(watchlist_name):
             st.warning(f"Erreur pour {sym}: {e}")
                 
                 # Rendu html par ligne
-                st.markdown(f'''
+            st.markdown(f'''
                 <div class="watchlist-row">
                     <div class="ticker-badge">{sym}</div>
                     <div class="company-name" title="{company_name}">{company_name}</div>
