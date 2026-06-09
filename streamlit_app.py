@@ -264,7 +264,7 @@ def display_watchlist(watchlist_name):
         try:
             price, prev_close = get_ticker_data(sym)
             company_name = get_company_name(sym)
-            
+    
             if price is None or prev_close is None:
                 price_text = "N/A"
                 abs_change_text = "N/A"
@@ -287,6 +287,7 @@ def display_watchlist(watchlist_name):
                 <div class="pct-change {pct_class}">{pct_change_text}</div>
             </div>
             ''', unsafe_allow_html=True)
+    
         except Exception as e:
             st.warning(f"Erreur pour {sym}: {e}")
                 
